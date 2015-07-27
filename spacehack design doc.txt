@@ -1,0 +1,174 @@
+Space hack design doc
+
+currently working on:
+	moving between maps
+		Currently: Refactoring to handle multiple maps by getting the maps from the PARTY interface. (just finished interfaceAlt)
+	
+		Here we're going to need to handle multiple active maps. This is because different party members could be in different places. 
+		
+		This is going to make pathfinding tricky. I think party members should only be able to follow things that are on maps. That being said, if I step on a portal, my party members should also step on that portal.
+	
+	buffs
+	Combat (namely, passive actions, like, the equipments passive acitons, how do I implement them?)
+	refactor any position data so that it handles points as defined in MyMath?
+	
+Buffs:
+	this should probably be some kind of observer pattern
+	Actually, maybe we don't need buffs. We can dynamically generate any kind of weapon we want, so weapons dont need buffs. The only thing we really need to do is figure out how armour interacts with combat, which maybe includes buffs.
+	
+	damage resistance: percentage and type 
+	damage reduction: amount and type
+	to hit: percentage and type
+	to dodge: percentage and type
+	add damage: amount and type <-- here this filters which type of damage cases accept this
+	multiply damage: percentage and type
+	
+	type matching: given a type we ask, does this buff apply to this type, use a dictionary like this {default:True/False, type: True, type: False}
+	So now, if the type is not found in the list, the answer is default, otherwise we just pull the answer.
+	
+	So if I say, protects against all damage except for beam damage we go:
+		damage resistance: 100% {default:True, beam:False}
+		no should be: damage resistance: {default:100, beam:0} as the base stat, and 100% {default:True, beam:False} be the buff
+		Say for instance I have
+		{default:0, beam:10, cutting:10}
+		and I want to buff against everything except beam then it should go:
+			for each type in the base stat, check if it is in the buff. If it is, check if it returns True, if it does, then add the percentage to the type and cut at 100%. If it is not in the buff then use the default value and add the percentage and cut at 100%
+	
+		
+		
+
+	these are all combat buffs. There will be other stats we will have to consider.
+
+Game loop:
+	
+	begin turn
+	display announcements
+	render after each announcement
+	focus on player
+	render
+	wait for input
+	render
+
+Game time:
+	Keep it simple!
+	two types of actions: free actions, and actions that take an action point
+	only thing to consider is speed. 
+	If a creature is faster, it gets an extra action point every n turns.
+	Problem: synchronizing party. Solution: indicate number of action points next to character name
+
+party object
+	some number of party members (pms)
+	control ordering of pms 
+	timing goes:
+		pm 1
+		pm 2
+		..
+		pm n
+		everyone else
+		
+	in order for this to be playable, pms should be able to be given tasks?
+		standard actions
+			move one space
+			attack that unit
+			wait a turn
+			basic roguelike stuff
+	
+		
+		passive actions
+			pathing to locations
+			following character
+			idle
+			
+			relax (take care of your personal needs: food, water, sleep)
+			
+			area of effect actions
+				covering fire
+				guarding hostages
+				keeping lookout
+				
+			activation actions (you have some power as long as unit remains there)
+				piloting ship
+				using terminal to control ship systems
+				holding open a door
+			extended actions (this action takes x turns)
+				healing someone
+				repairing something
+				hacking into a system
+				
+		all passive actions can be constructed as queues of standard actions
+		
+		it seems we need to make a distinction between orders and actions in the code, for example, moving a space is an action (move aciton) and it goes in the action queue, but following a unit is an order, which populates the action queue with appropriate move actions.
+
+	play should go something like this:
+		the scene renders
+		
+		Your turn begins
+		
+		check for interrupts
+		
+		if any party members experience an interrupt, focus cycles through all interrupted party members, explaining interruption
+		
+		after interrupt messages, focus on your primary party member (leader), with whom you can make standard actions, or press continue to have leader continue assigned passive action
+		
+		every other party member is displayed as a list somewhere, with an icon indicating their current action. This list can be modified so that different party members are in a different order.
+		
+		Selecting a party member centers focus on party member, to whom you can issue a passive action command or standard action command. 
+		
+		Note: Activation actions are unique. They essentially take a party member and turn them into a different entity with a new suite of actions, including the option to disengage and turn back to a party member. For example, assigning a party member Fernandez to pilot the ship takes Fernandez and turns him into a ship, so when focus lands on Fernandez, you focus on a ship with possible actions like fire at other ship or navigate to some planet, or go back into Fernandez mode. Note that when Fernandez is in pilot mode he must be aware of interrupts from both his surroundings as well as ship interrupts.
+			
+		once the leader performs their action the players turn is over, all those party members which have not yet performed actions will perform their scheduled passive action.
+		
+			Possible conflict: if the party list is modified such that a party member who has already taken an action is placed into the leader position, then the next party member with free actions is treated as the leader for the purposes of the above rule.
+
+gameplay
+		
+
+Map object
+	Galaxy
+		nebulae
+			gas clouds
+			space stations
+		stellar systems
+			stars
+			planets
+			asteroids
+			space stations
+
+Item ideas
+	basic funtionality:
+		items can pile up on the ground
+		I don't know if I want them to weigh anything, but some things need to be picked up and lugged around, and other things can go into a container... maybe "big" items and "small" items
+		items can be placed in containers, which can in turn be embodied as items
+		a players inventory could be thought of as a container
+	
+	fuels: (fuels are items which supply functionality to other items)
+		stem cells
+		grey goo
+		exotic matter
+		anti matter
+		electricity
+		hydrogen
+	weapons:
+		can be weilded
+		do damage (ie require a damage system)
+	key cards:
+		supply access to doors when wielded
+		ie: change functionality of tiles when wielded
+		programming thought: who is responsible for this behaviour? Is it the door or the key card? If it is the door, the code would go something like this: "on open, check if player has keycard, if so, open otherwise dont
+		whereas if it were keycard it would go something like this:	register to open door observer pattern. Or maybe, modify player access level.
+		I think ultimately in this case the door should be responsible.
+		
+Interface:
+	Most interactions between the world are activation type interactions. So there should just be an "activateable" option for some tiles, like doors, computer terminals, engines, etc...
+	
+	
+Picking up tiles:
+	some tiles can be picked up? For example, crates and machinery.
+	
+	
+Synergy of Game Modes:
+	There are a few perspectives we can take in game:
+		Overworld (people walking around)
+		Space (spaceships)
+		Cyberspace
+		

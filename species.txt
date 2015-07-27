@@ -1,0 +1,39 @@
+#species data is a flywheel style structure, it can be stored in a dictionary
+
+#let's invent some species to see what kind of properties they require
+
+
+Human
+size: 1
+strength: 1
+intelligence: 1
+breathes: oxygen
+canFly: no
+eats: organics
+enjoys: socializing, playing games, making art
+description: A bipedal creature, approximately 5 feet tall. 
+char: @
+color: pale pink
+
+
+Android
+size: 1
+strength: 5
+intelligence: 2
+breathes: none
+canFly: no
+eats: electricity
+enjoys: cleaning
+description: a machine that looks identical to a human
+char: @ (light blue)
+
+
+
+Burnak
+size: 3
+strength: 3
+intelligence: .5
+breathes: oxygen
+eats: organics
+enjoys: sleeping, slaughtering
+decsription:
