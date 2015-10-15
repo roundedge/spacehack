@@ -23,7 +23,17 @@ class Party:
 			number=len(self.members)-1
 		if(number<0):
 			number=0
-		self.focus=number
+		#self.focus=number
+		self.setLeader(number)
+		
+	def setLeader(self,number):
+		if(len(self.members)==0):
+			return
+		if(number>=len(self.members)):
+			number=len(self.members)-1
+		if(number<0):
+			number=0
+		self.members=[self.members[number]]+self.members[0:number]+self.members[number+1:len(self.members)]
 	
 	def getFocus(self):
 		return self.getMember(self.focus)

@@ -2,12 +2,23 @@ Space hack design doc
 
 currently working on:
 	moving between maps
-		Currently: Refactoring to handle multiple maps by getting the maps from the PARTY interface. (just finished interfaceAlt)
+		x-Refactoring to handle multiple maps by getting the maps from the PARTY interface. (just finished interfaceAlt)
 	
 		Here we're going to need to handle multiple active maps. This is because different party members could be in different places. 
 		
 		This is going to make pathfinding tricky. I think party members should only be able to follow things that are on maps. That being said, if I step on a portal, my party members should also step on that portal.
-	
+		
+		What are the instances of moving between maps?
+			Getting onto a ship
+			moving to a different local region
+			Going out into space
+			
+		The most basic tool is a teleportation tile which simply takes you to a new map when stepped on.  
+		
+		Done! except I made it an activatable
+		Some issue with lighting and speed
+		and a problem with the follow command not working
+		
 	buffs
 	Combat (namely, passive actions, like, the equipments passive acitons, how do I implement them?)
 	refactor any position data so that it handles points as defined in MyMath?

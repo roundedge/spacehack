@@ -2,7 +2,9 @@ import libtcodpy as libtcod
 
 class Object:
 
-	#so the Object class has its own namespace, and it is there that we can put default instances of all the components, so we don't have to constantly be asking wether the object has an instance of it. This means making default objects.. is this wise? We do not want to be misleading about the functionality of an object
+	#so the Object class has its own namespace, and it is there that we can put default instances of all the components,
+	# so we don't have to constantly be asking wether the object has an instance of it. 
+	#This means making default objects.. is this wise? We do not want to be misleading about the functionality of an object
 
 	#this is a generic object: the player, a monster, an item, the stairs..
 	#its always represented by a character on screen.
@@ -17,6 +19,7 @@ class Object:
 		self.wearable=wearable
 		self.mortal=mortal
 		self.combatant=combatant
+		self.map=None
 		
 		if self.actor:
 			self.actor.owner=self

@@ -71,6 +71,36 @@ class MoveAction:
 	def fail(self, reason):
 		print(reason)
 
+class SwapPlacesAction:
+	apCost=1
+
+	def __init__(self, mover, obstruction):
+		self.mover=mover
+		self.obstruction=obstruction
+
+	def validAction(self):
+		if(self.obstruction.actor):
+			return (True, 'valid')
+		else:
+			return (False, 'This thing cant move')
+
+	def act(self):
+		map=self.mover.map
+		pos1=self.mover.position()
+		pos2=self.obstruction.position()
+		if (self.mover.actor.ap >= self.apCost):
+			if map.removeObject(self.obstruction):
+				if map.removeObject(self.mover):
+					map.addObject(self.mover, pos2[0],pos2[1])
+					map.addObject(self.obstruction,pos1[0],pos1[1])
+				else:
+					self.fail('huh? see SwapPlacesAction')
+			else:
+				self.fail('switching with something not on the map')
+
+	def fail(self,reason):
+		print(reason)
+
 class DropAction:
 	apCost=1
 	

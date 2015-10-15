@@ -127,7 +127,17 @@ def setFocus(PARTY,value):
 
 def move(PARTY,dx,dy):
 	if(dx is not 0 or dy is not 0):
-		actions.MoveAction(PARTY.getFocus(),dx,dy).act()
+		toMove=PARTY.getFocus()
+		#check if one of your party members is in the way
+		if(toMove.map):
+			x,y=toMove.position()
+			map=toMove.map
+			for dude in PARTY.members:
+				if(dude in map.objectsAt(x+dx,y+dy)):
+					actions.SwapPlacesAction(toMove, dude).act()
+					return
+
+		actions.MoveAction(toMove,dx,dy).act()
 		#currentMap.fov_recompute=True
 
 def pickup(PARTY,toPickup):

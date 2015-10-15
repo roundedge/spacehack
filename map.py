@@ -57,12 +57,13 @@ class Map:
 		
 		xi=mapWindow.topLeft().x if mapWindow.topLeft().x < self.width else self.width
 		xf=mapWindow.bottomRight().x if mapWindow.bottomRight().x < self.width else self.width
+
 	
 		if self.fov_recompute:
 			#recompute FOV if needed (the player moved or something)
 			self.fov_recompute=False
-			for y in range(yi,yf):
-					for x in range(xi,xf):
+			for y in range(yi if yi>=0 else 0,yf):
+					for x in range(xi if xi>=0 else 0,xf):
 						self.visibility[x][y]=False
 			for member in PARTY.members:
 				fov=ltc.map_new(self.width,self.height)
@@ -75,9 +76,8 @@ class Map:
 			
 			#ltc.map_compute_fov(self.fov_map,self.positionOf(PARTY.getFocus())[0],self.positionOf(PARTY.getFocus())[1], self.TORCH_RADIUS, self.FOV_LIGHT_WALLS, self.FOV_ALGO)
 		
-	
-		for y in range(yi,yf):
-			for x in range(xi,xf):
+		for y in range(yi if yi>=0 else 0,yf):
+			for x in range(xi if xi>=0 else 0,xf):
 				screen_x=x-xi
 				screen_y=y-yi
 				visible=ltc.map_is_in_fov(self.fov_map,x,y)
@@ -118,6 +118,10 @@ class Map:
 	
 	def allObjects(self):
 		return util.collapse(util.collapse(self.objects))
+
+	def objectsAt(self,x,y):
+		#TODO: check boundaries and ensure immutability
+		return self.objects[x][y]
 	
 	def actorAt(self, x,y):
 		for o in self.objects[x][y]:
@@ -344,8 +348,7 @@ class Tile:
 			self.activateable.draw(x,y,visible,screen)
 		else:
 			self.drawCB.__call__(x,y,visible,screen)
-
-	
+			
 
 class Activateable:
 	def __init__(self, onActivateCB, activatedDrawCB):
@@ -424,16 +427,63 @@ def ComputerTerminal():
 	
 	a=Activateable(onActivateCB,activatedDrawCB)
 	
-	return Tile(True,normalDrawCB,block_sight=False,name="Door", activateable=a)
-		
+	return Tile(False,normalDrawCB,block_sight=False,name="Door", activateable=a)
+
+def exitTo(map,x,y):
+	def onActivateCB(tile,activator):
+		activator.removeFromMap()
+		map.addObject(activator,x,y)
+	def normalDrawCB(x,y,visible,screen):
+		if visible:
+			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_exit,ltc.BKGND_SET)
+		else:
+			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_exit,ltc.BKGND_SET)
+	a=Activateable(onActivateCB,normalDrawCB)
+	return Tile(True,normalDrawCB,block_sight=False, name="exit",activateable=a)
 	
+		
+
+# map factory
+def test_plaza():
+	plaza=Map(101,101)
+	for i in range(20):
+		for j in range(20):
+			plaza.setTile(i,j,Wall())
+			plaza.setTile(plaza.width-i-1,j, Wall())
+			plaza.setTile(i,plaza.height-j-1,Wall())
+			plaza.setTile(plaza.width-i-1, plaza.height-j-1, Wall())
+	for i in range(plaza.width):
+		plaza.setTile(i,0,Wall())
+		plaza.setTile(i,plaza.height-1,Wall())
+	for i in range(plaza.height):
+		plaza.setTile(0,i,Wall())
+		plaza.setTile(plaza.width-1,i,Wall())
+	
+	for i in range(20):
+		for j in range(20):
+			plaza.setTile(i-plaza.width/2-10, j-plaza.height/4-10, Wall())
+	
+	return plaza
+	
+def test_shuttle():
+	shuttle=Map(51,51)
+	for i in range(shuttle.width):
+		shuttle.setTile(i,0,Wall())
+		shuttle.setTile(i,shuttle.height-1,Wall())
+	for i in range(shuttle.height):
+		shuttle.setTile(0,i,Wall())
+		shuttle.setTile(shuttle.width-1,i,Wall())
+	return shuttle
+
+		
+		
 #test
-m=Map(20,20)
-m.tile(5,10).blocked=True
-m.bc=0
-x=10
-y=10
-pos=m.pathThrough(x,y,20,0)
-print(str(x))
-print(str(y))
-print(pos)
+#m=Map(20,20)
+#m.tile(5,10).blocked=True
+#m.bc=0
+#x=10
+#y=10
+#pos=m.pathThrough(x,y,20,0)
+#print(str(x))
+#print(str(y))
+#print(pos)

@@ -40,7 +40,7 @@ class Game:
 	
 		#construct world
 		self.PARTY=Party()
-		self.currentMap=map.Map(800,600)
+		#self.currentMap=map.test_plaza()#map.Map(60,60)
 	
 		self.interface=interface3.PartyInterface(self.PARTY,self)
 	
