@@ -219,8 +219,8 @@ class PartyInterface(Interface):
 		
 	def onMouse(self,PARTY,game,mouse):
 		if(mouse.rbutton):
-			tilex=mouse.cx+game.mapTopLeftX()
-			tiley=mouse.cy+game.mapTopLeftY()
+			tilex=mouse.cx+game.screen.mapTopLeftX()
+			tiley=mouse.cy+game.screen.mapTopLeftY()
 			game.interface=ActionSelectInterface(PARTY.getFocus(),tilex,tiley,game)
 		
 

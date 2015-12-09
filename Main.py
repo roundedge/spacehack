@@ -47,7 +47,7 @@ currentMap.tile(50,21).activateable.activate(None)
 
 for i in range(14):
 	keycard=object.Object(',', ltc.lighter_sea, name="keycard", item=items.Item(stackable=items.Stackable(4)))
-	currentMap.addObject(keycard,spacehack.SCREEN_WIDTH/2, spacehack.SCREEN_HEIGHT/2)
+	currentMap.addObject(keycard,spacehack.screen.width/2, spacehack.screen.height/2)
 	
 gun=combat.LaserGun(4, 6)
 player1.combatant.weild(gun)

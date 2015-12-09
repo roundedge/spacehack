@@ -324,7 +324,8 @@ class Map:
 		
 	def y(self,object):
 		return self.positionOf(object)[1]
-	
+
+
 class Tile:
 	#a tile of the map
 	def __init__(self, blocked, drawCB, block_sight=None, name="Tile",activateable=None):
@@ -365,15 +366,9 @@ class Activateable:
 		
 	def draw(self,x,y,visible,screen):
 		self.activatedDrawCB.__call__(x,y,visible,screen)
-	
-def bgDrawStyle(visibleColor,notVisibleColor):
-	#this gives you draw callbacks which draw the given color
-	def drawCallback(x,y,visible,screen):
-		if(visible):
-			ltc.console_set_char_background(screen,x,y,visibleColor,ltc.BKGND_SET)
-		else:
-			ltc.console_set_char_background(screen,x,y,notVisibleColor,ltc.BKGND_SET)
-	return drawCallback
+
+
+#design domain
 	
 def Wall():
 	return Tile(True,bgDrawStyle(tileStyles.color_light_wall,tileStyles.color_dark_wall),block_sight=True,name="Wall")

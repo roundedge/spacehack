@@ -8,6 +8,7 @@ import actions
 import orders
 import MyMath
 import interface3
+import rendering
 
 class Game:
 	#game loop finite state machine
@@ -20,18 +21,7 @@ class Game:
 	stateMachine={}
 
 	def __init__(self):
-		
-		#screen stuff
-		self.SCREEN_WIDTH=125
-		self.SCREEN_HEIGHT=75
-		self.LIMIT_FPS=20
-		
-		#initialize the screens
-		ltc.console_set_custom_font('terminal8x8_gs_as.png', ltc.FONT_TYPE_GREYSCALE | ltc.FONT_LAYOUT_ASCII_INCOL)
-		ltc.console_init_root(self.SCREEN_WIDTH, self.SCREEN_HEIGHT, 'spacehack', False)
-		ltc.sys_set_fps(self.LIMIT_FPS)
-
-		self.gameScreen=ltc.console_new(self.SCREEN_WIDTH,self.SCREEN_HEIGHT)
+		self.screen=rendering.Screen(self)
 
 	
 		#initialize input
@@ -49,42 +39,7 @@ class Game:
 		self.waiting_for_input=False
 		self.show_scheduled_actions=False
 		self.state=Game.PLAYERS_TURN
-			
-	#rendering
-	def mapTopLeftX(self):
-		focus_pos=self.PARTY.getFocus().position()
-		if(focus_pos):
-			return focus_pos[0]-self.SCREEN_WIDTH/2
-		else:
-			return -self.SCREEN_WIDTH/2 
 
-	def mapTopLeftY(self):
-		focus_pos=self.PARTY.getFocus().position()
-		if(focus_pos):
-			return focus_pos[1]-self.SCREEN_HEIGHT/2
-		else:
-			return -self.SCREEN_HEIGHT/2
-	
-	def render_all(self):
-		ltc.console_clear(self.gameScreen)
-		
-		#these are the coordinates on the map that conform to the dimensions of the screen, centered on where we would like them to be centered
-		mapWindow=MyMath.Rect(self.mapTopLeftX(),self.mapTopLeftY(),self.SCREEN_WIDTH,self.SCREEN_HEIGHT)
-		
-		focused_map=self.PARTY.getFocus().map
-		if(focused_map):
-			focused_map.draw(self.PARTY, self.gameScreen, mapWindow)
-		else:
-			#TODO: draw the current party member floating in a vacuum
-			print("player out of bounds")
-		ltc.console_blit(self.gameScreen,0,0,self.SCREEN_WIDTH,self.SCREEN_HEIGHT,0,0,0)
-		
-		self.PARTY.draw_menu(self.gameScreen)
-		
-		self.interface.draw(self.gameScreen)
-		
-		ltc.console_flush()
-	
 	
 	
 	def handle_keys(self):
@@ -132,25 +87,45 @@ class Game:
 	
 	def doPlayersTurn(self):
 		#wait for input from player
+		print("check for input")
 		exit=self.handle_keys()
-		#once the leader performs their action the players turn is over, 
-		if(self.PARTY.getMember(0).actor.ap==0):
-			#all those party members which have not yet performed actions will perform their scheduled passive actions until they have run out of action points.
-			if(self.show_scheduled_actions==False):
-				for i in range(self.PARTY.size()):
-					#go through the party members until you find one with action points
-					while(self.PARTY.getMember(i).actor.ap!=0):
-						#TODO: spend all their action points
-						#PARTY.getMember(i).takeScheduledAction()
-						self.PARTY.getMember(i).actor.takeOrder()
-						self.PARTY.getMember(i).actor.ap=0
-						#TODO: figure out how you want to make sure that taking an order which spends zero action points doesn't cause an infinite loop, the above fix is a kludge (SEE ALSO, DO NPCS TURN)
-						pass
+
+		turnBased=1
+		realtime=2
+		gameStyle=realtime
+
+		if gameStyle is turnBased:
+			#once the leader performs their action the players turn is over, 
+			if(self.PARTY.getMember(0).actor.ap==0):
+				#all those party members which have not yet performed actions will perform their scheduled passive actions until they have run out of action points.
+				if(self.show_scheduled_actions==False):
+					for i in range(self.PARTY.size()):
+						#go through the party members until you find one with action points
+						while(self.PARTY.getMember(i).actor.ap!=0):
+							#TODO: spend all their action points
+							#PARTY.getMember(i).takeScheduledAction()
+							self.PARTY.getMember(i).actor.takeOrder()
+							self.PARTY.getMember(i).actor.ap=0
+							#TODO: figure out how you want to make sure that taking an order which spends zero action points doesn't cause an infinite loop, the above fix is a kludge (SEE ALSO, DO NPCS TURN)
+							pass
+					self.state=self.NPCS_TURN
+				else:
+					self.state=self.FINISHING_PLAYERS_TURN
+					#print('finishing players turn')
+			return exit
+
+		if gameStyle is realtime:
+			for i in range(self.PARTY.size()):
+				#go through the party members until you find one with action points
+				while(self.PARTY.getMember(i).actor.ap!=0):
+					#TODO: spend all their action points
+					self.PARTY.getMember(i).actor.takeOrder()
+					self.PARTY.getMember(i).actor.ap=0
+					#TODO: figure out how you want to make sure that taking an order which spends zero action points doesn't cause an infinite loop, the above fix is a kludge (SEE ALSO, DO NPCS TURN)
+					pass
 				self.state=self.NPCS_TURN
-			else:
-				self.state=self.FINISHING_PLAYERS_TURN
-				#print('finishing players turn')
-		return exit
+			return exit
+
 	
 	def finishPlayersTurn(self):
 		#all those party members which have not yet performed actions will perform their scheduled passive actions until they have run out of action points.
@@ -201,5 +176,5 @@ class Game:
 	
 	def loop(self):
 		#Render Scene
-		if self.state==self.PLAYERS_TURN: self.render_all()
+		if self.state==self.PLAYERS_TURN: self.screen.render()
 		return self.stateMachine[self.state](self)
