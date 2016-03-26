@@ -10,6 +10,7 @@ class Map:
 	#boundary conditions
 	HARD_BOUNDARY=0
 	PERIODIC_BOUNDARY=1
+
 	
 	#Field of View
 	FOV_ALGO = 0
@@ -18,15 +19,22 @@ class Map:
 	
 	
 	def __init__(self, width,height):
+		self.tilesToRender={}
+
 		self.fov_recompute=True
 		self.bc=Map.PERIODIC_BOUNDARY
 	
 		self.width=width
 		self.height=height
+
 		self.tiles=[[ Floor()
 			for y in range(self.height)]
 				for x in range(self.width)]
-		
+
+		for y in range(self.height):
+			for x in range(self.width):
+				self.tilesToRender[(x,y)]="floor"
+
 		self.objects=[[[] 
 			for y in range(self.height)]
 				for x in range(self.width)]
@@ -50,6 +58,7 @@ class Map:
 	
 	def setTile(self,x,y,tile):
 		self.tiles[x][y]=tile
+		self.tilesToRender[(x,y)]=tile.renderHandle()
 	
 	def draw(self,PARTY, screen, mapWindow):
 		yi=mapWindow.topLeft().y if mapWindow.topLeft().y < self.height else self.height
@@ -328,12 +337,12 @@ class Map:
 
 class Tile:
 	#a tile of the map
-	def __init__(self, blocked, drawCB, block_sight=None, name="Tile",activateable=None):
+	def __init__(self, blocked, render_handle, block_sight=None, name="Tile",activateable=None):
 		#draw callback contract:
 		#	draw(x,y,visible,screen)
 		self.blocked = blocked
 		self.name=name
-		self.drawCB=drawCB
+		self.render_handle=render_handle
 		#by default, if a tile is blocked, it also blocks sight
 		if block_sight is None: block_sight = blocked
 		self.block_sight = block_sight
@@ -342,20 +351,21 @@ class Tile:
 		if(self.activateable):
 			self.activateable.owner=self
 
-		
-	def draw(self, x,y,visible,screen):
-		wall=self.block_sight
-		if self.activateable and self.activateable.activated:
-			self.activateable.draw(x,y,visible,screen)
+	def renderHandle(self):
+		if(self.activateable and self.activateable.activated):
+			return self.activateable.activated_render_handle
+
 		else:
-			self.drawCB.__call__(x,y,visible,screen)
+			return self.render_handle
+
+
 			
 
 class Activateable:
-	def __init__(self, onActivateCB, activatedDrawCB):
+	def __init__(self, onActivateCB, activated_render_handle):
 		self.activated=False
 		self.onActivateCB=onActivateCB
-		self.activatedDrawCB=activatedDrawCB
+		self.activated_render_handle=activated_render_handle
 		self.owner=None
 		#onActivate callback contract:
 		#	onActivate(tile (Tile), activator (Object))
@@ -364,77 +374,35 @@ class Activateable:
 		self.activated= not self.activated
 		self.onActivateCB.__call__(self.owner, activator)
 		
-	def draw(self,x,y,visible,screen):
-		self.activatedDrawCB.__call__(x,y,visible,screen)
-
 
 #design domain
 	
 def Wall():
-	return Tile(True,bgDrawStyle(tileStyles.color_light_wall,tileStyles.color_dark_wall),block_sight=True,name="Wall")
+	return Tile(True,"wall",block_sight=True,name="Wall")
 	
 def Floor():
-	return Tile(False,bgDrawStyle(tileStyles.color_light_ground,tileStyles.color_dark_ground),block_sight=False,name="Floor")
+	return Tile(False,"floor",block_sight=False,name="Floor")
 	
 def Door():
 	def onActivateCB(tile, activator):
 		tile.blocked=not tile.blocked
-	def activatedDrawCB(x,y,visible,screen):
-		if visible:
-			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_light_wall)
-		else:
-			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_dark_wall)
-		ltc.console_put_char(screen, x, y, ltc.CHAR_CHECKBOX_UNSET, ltc.BKGND_NONE)
-	def normalDrawCB(x,y,visible,screen):
-		if visible:
-			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_light_wall)
-		else:
-			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_dark_wall)
-		ltc.console_put_char(screen, x, y, ltc.CHAR_CROSS, ltc.BKGND_NONE)
+	a=Activateable(onActivateCB,"open_door")
 	
-	a=Activateable(onActivateCB,activatedDrawCB)
-	
-	return Tile(True,normalDrawCB,block_sight=False,name="Door", activateable=a)
+	return Tile(True,"closed_door",block_sight=False,name="Door", activateable=a)
 
 def ComputerTerminal():
 	def onActivateCB(tile, activator):
 		tile.blocked=not tile.blocked
-	def activatedDrawCB(x,y,visible,screen):
-		if visible:
-			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_light_wall)
-		else:
-			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_dark_wall)
-		ltc.console_put_char(screen, x, y, 167, ltc.BKGND_NONE)
-	def normalDrawCB(x,y,visible,screen):
-		if visible:
-			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_light_wall)
-		else:
-			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_ground,ltc.BKGND_SET)
-			ltc.console_set_default_foreground(screen ,tileStyles.color_dark_wall)
-		ltc.console_put_char(screen, x, y, 167, ltc.BKGND_NONE)
+	a=Activateable(onActivateCB,"active_terminal")
 	
-	a=Activateable(onActivateCB,activatedDrawCB)
-	
-	return Tile(False,normalDrawCB,block_sight=False,name="Door", activateable=a)
+	return Tile(False,"inactive_terminal",block_sight=False,name="Door", activateable=a)
 
 def exitTo(map,x,y):
 	def onActivateCB(tile,activator):
 		activator.removeFromMap()
 		map.addObject(activator,x,y)
-	def normalDrawCB(x,y,visible,screen):
-		if visible:
-			ltc.console_set_char_background(screen, x, y, tileStyles.color_light_exit,ltc.BKGND_SET)
-		else:
-			ltc.console_set_char_background(screen,x,y,tileStyles.color_dark_exit,ltc.BKGND_SET)
-	a=Activateable(onActivateCB,normalDrawCB)
-	return Tile(True,normalDrawCB,block_sight=False, name="exit",activateable=a)
+	a=Activateable(onActivateCB,"exit")
+	return Tile(True,"exit",block_sight=False, name="exit",activateable=a)
 	
 		
 

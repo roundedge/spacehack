@@ -49,7 +49,7 @@ class Party:
 		if(number<0):
 			number=0
 		return self.members[number]
-	
+
 	def getCurrentMaps(self):
 		maps=[]
 		for member in self.members:

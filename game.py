@@ -9,6 +9,7 @@ import orders
 import MyMath
 import interface3
 import rendering
+import renderingPYG
 
 class Game:
 	#game loop finite state machine
@@ -20,8 +21,8 @@ class Game:
 	
 	stateMachine={}
 
+
 	def __init__(self):
-		self.screen=rendering.Screen(self)
 
 	
 		#initialize input
@@ -167,6 +168,8 @@ class Game:
 		#print("passive actions")
 		self.state=self.ANNOUNCEMENTS
 	
+	def render(self):
+		#TODO
 	
 	stateMachine={ANNOUNCEMENTS:makeAnnouncements,
 	PLAYERS_TURN:doPlayersTurn,
@@ -176,5 +179,35 @@ class Game:
 	
 	def loop(self):
 		#Render Scene
-		if self.state==self.PLAYERS_TURN: self.screen.render()
+		if self.state==self.PLAYERS_TURN: self.render()
 		return self.stateMachine[self.state](self)
+
+#the game structure is kind of tricky, what I want to do is have the rendering engine be a bit more agnostic so that I can call it without having the structure of the game known, but I want to delegate the specific details of rendering out of the game class and into a seperate mediating agent,
+
+class Rendering_Agent:
+	
+	def __init__(self):
+		self.currentMap=None
+		self.mapChanged=False
+
+	def setMap(self,map):
+		if self.currentMap!=map:
+			self.mapChanged=True
+			self.currentMap=map
+		else:
+			self.mapChanged=False
+
+	def render(self):
+		#check if the last map rendered has changed
+		if self.mapChanged:
+			#TODO
+		#if so, construct new tile changes
+
+		#get the tile changes
+		self.
+		#clear the tile changes
+
+		#get the objects
+
+		#draw the scene
+		self.screen.
